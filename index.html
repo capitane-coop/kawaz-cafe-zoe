@@ -39,6 +39,7 @@
   .iban { font-family:ui-monospace,Menlo,monospace; font-weight:700; user-select:all; }
   .virement { margin-top:12px; line-height:1.7; padding:14px; background:var(--creme); border-radius:10px; text-align:left; font-size:.95rem; }
   .copy { margin-left:6px; padding:3px 9px; border:1px solid #ddd2c4; border-radius:6px; background:#fff; font:inherit; font-size:.8rem; cursor:pointer; color:var(--brun); }
+  .mail { display:inline-block; margin-top:10px; padding:10px 16px; border-radius:10px; background:var(--accent); color:#fff; font-weight:700; text-decoration:none; }
   footer { margin-top:20px; text-align:center; font-size:.8rem; color:var(--gris); }
 </style>
 </head>
@@ -156,6 +157,7 @@
     msg.textContent = "Envoi…";
     try {
       const r = await fetch("https://formsubmit.co/ajax/" + EMAIL, {
+        signal: AbortSignal.timeout(15000),
         method: "POST",
         headers: { "Content-Type": "application/json", Accept: "application/json" },
         body: JSON.stringify(data)
@@ -179,8 +181,17 @@
         </div></div>`;
     } catch (err) {
       $("btn").disabled = false;
+      const body = [
+        "Nom : " + nom,
+        "Paquets en grains : " + qty.grains,
+        "Paquets moulus : " + qty.moulu,
+        "Total : " + n * PRIX + " €",
+        "Remarque : " + ($("remarque").value.trim() || "—"),
+        "Communication du virement : " + communication()
+      ].join("\n");
+      const href = "mailto:" + EMAIL + "?subject=" + encodeURIComponent(data._subject) + "&body=" + encodeURIComponent(body);
       msg.className = "msg err";
-      msg.textContent = "Oups, l'envoi a échoué. Réessayez ou contactez directement Zoé.";
+      msg.innerHTML = "Le service d'envoi ne répond pas. Envoyez votre commande par mail, elle est déjà rédigée :<br><a class=\"mail\" href=\"" + href + "\">📧 Envoyer ma commande par mail</a>";
     }
   });
 
